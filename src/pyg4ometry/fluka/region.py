@@ -1,5 +1,6 @@
 import itertools
 import logging
+import re as _re
 from copy import deepcopy
 from uuid import uuid4
 from math import degrees
@@ -651,6 +652,24 @@ class Region(vis.ViewableMixin):
 
     def flukaFreeString(self):
         fs = f"{self.name} 5 {self.dumps()}"
+
+        '''
+        Find expressions that have only one term inside brackets.
+        The term starts with B by definition followed by numbers.
+        '''
+        pattern = _re.compile(r'\(\s*([+-]\s*B\d+)\s*\)')
+
+        def removeAdditionalPlus(match):
+            '''
+            We also need to remove the plus sign in front of the single term
+            '''
+            term = match.group(1).strip() #Remove any extra whitespace
+            if term.startswith('+'):
+                term = term[1:].lstrip()
+            return term
+
+        while pattern.search(fs):
+            fs = pattern.sub(removeAdditionalPlus, fs)
 
         # split line (132 characters)
         linLen = 132 - 5
